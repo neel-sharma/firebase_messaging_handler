@@ -1,0 +1,4 @@
+enum FirebaseMessagingHandlerAppStateEnum {
+  foreground,
+  background,
+}
