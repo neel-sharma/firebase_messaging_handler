@@ -11,11 +11,12 @@ abstract class FirebaseMessagingHandlerPlatformUtility {
   bool get isIos;
 }
 
-class FirebaseMessagingHandlerPlatformUtilityImplementation implements FirebaseMessagingHandlerPlatformUtility {
+class FirebaseMessagingHandlerPlatformUtilityImplementation
+    implements FirebaseMessagingHandlerPlatformUtility {
   late Platform platform;
 
   @override
-  void init(){
+  void init() {
     platform = const LocalPlatform();
   }
 

@@ -1,14 +1,12 @@
+import 'package:firebase_messaging_handler/src/constants/firebase_messaging_handler_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../constants/index.dart';
-
 
 abstract class FirebaseMessagingHandlerSharedPreferences {
   Future<void> init();
 
   Future<void> saveFcmToken(String token);
 
-  String? getFcmToken();
+  Future<String?> getFcmToken();
 
   Future<void> removeFcmToken();
 }
@@ -31,8 +29,9 @@ class FirebaseMessagingHandlerSharedPreferencesImplementation
   }
 
   @override
-  String? getFcmToken() {
-    return prefs.getString(FirebaseMessagingHandlerConstants.fcmTokenPrefKey);
+  Future<String?> getFcmToken() {
+    return Future.value(
+        prefs.getString(FirebaseMessagingHandlerConstants.fcmTokenPrefKey));
   }
 
   @override

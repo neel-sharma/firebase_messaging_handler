@@ -1,4 +1,3 @@
-
 class NotificationData {
   final Map<String, dynamic> payload;
 

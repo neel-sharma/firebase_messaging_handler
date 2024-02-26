@@ -1,6 +1,5 @@
+import 'package:firebase_messaging_handler/firebase_messaging_handler.dart';
 import 'package:flutter/widgets.dart';
-
-import '../enums/index.dart';
 
 class FirebaseMessagingAppStateUtility {
   // Private constructor to enforce singleton pattern
