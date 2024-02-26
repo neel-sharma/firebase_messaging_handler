@@ -4,7 +4,6 @@ import 'package:get_it/get_it.dart';
 
 import '../index.dart';
 import '../local_storage/index.dart';
-import '../utilities/firebase_messaging_utility.dart';
 
 
 final GetIt locator = GetIt.instance;
