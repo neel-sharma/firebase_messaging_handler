@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
-import '../extensions/index.dart';
-import '../constants/index.dart';
-import '../models/index.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import '../constants/index.dart';
+import '../extensions/index.dart';
 import '../local_storage/index.dart';
+import '../models/index.dart';
 import 'firebase_messaging_app_state_utility.dart';
 import 'firebase_messaging_handler_platform_utility.dart';
 
@@ -60,7 +62,7 @@ class FirebaseMessagingUtilityImplementation
 
     final bool permissionsGranted = await requestPermission();
     if (permissionsGranted) {
-      final String? savedFcmToken = sharedPref.getFcmToken();
+      final String? savedFcmToken = await sharedPref.getFcmToken();
       if (savedFcmToken == null) {
         final String? fcmToken = await fetchFcmToken(senderId: senderId);
         if (fcmToken != null) {
