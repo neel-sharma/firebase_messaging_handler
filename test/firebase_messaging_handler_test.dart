@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:firebase_messaging_handler/firebase_messaging_handler.dart';
 import 'package:firebase_messaging_handler/firebase_messaging_handler_platform_interface.dart';
 import 'package:firebase_messaging_handler/firebase_messaging_handler_method_channel.dart';
 

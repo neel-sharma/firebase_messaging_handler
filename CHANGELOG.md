@@ -1,3 +1,3 @@
-## 0.0.1
+## 0.0.2
 
-* TODO: Describe initial release.
+* TODO: increased compatibility with lower SDK and dependency versions.
