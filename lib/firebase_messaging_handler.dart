@@ -1,15 +1,21 @@
 library notification_utility;
 
+import 'dart:developer';
+
+import 'package:firebase_messaging_handler/src/locator/locator.dart';
+
 import 'firebase_messaging_handler_platform_interface.dart';
 import 'src/index.dart';
-export 'src/models/index.dart';
+
 export 'src/enums/index.dart';
+export 'src/models/index.dart';
 
 /// A utility class for managing notifications, ensuring a single instance
 /// through the application lifecycle using the Singleton pattern.
 class FirebaseMessagingHandler {
   // Singleton instance
-  static final FirebaseMessagingHandler instance = FirebaseMessagingHandler._internal();
+  static final FirebaseMessagingHandler instance =
+      FirebaseMessagingHandler._internal();
 
   // Indicates if the locator setup has been performed
   bool _isLocatorSet = false;
@@ -19,10 +25,10 @@ class FirebaseMessagingHandler {
 
   /// Initializes the notification utility with necessary configurations.
   Future<Stream<NotificationData?>?> init({
-    required String senderId,
-    required List<NotificationChannelData> androidChannelList,
-    required String androidNotificationIconPath,
-    required Future<bool> Function(String fcmToken) updateTokenCallback,
+    required final String senderId,
+    required final List<NotificationChannelData> androidChannelList,
+    required final String androidNotificationIconPath,
+    required final Future<bool> Function(String fcmToken) updateTokenCallback,
   }) async {
     await _ensureLocatorSetup();
     return await locator<FirebaseMessagingUtility>().init(
@@ -37,8 +43,6 @@ class FirebaseMessagingHandler {
     await _ensureLocatorSetup();
     await locator<FirebaseMessagingUtility>().checkInitial();
   }
-
-
 
   /// Disposes of the notification utility resources.
   Future<void> dispose() async {
@@ -59,6 +63,8 @@ class FirebaseMessagingHandler {
     if (!_isLocatorSet) {
       await setupLocator();
       _isLocatorSet = true;
+    } else {
+      log("${FirebaseMessagingHandlerConstants.logName}: Locator already setup, skipping");
     }
   }
 

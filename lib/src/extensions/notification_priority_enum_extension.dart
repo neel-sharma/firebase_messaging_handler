@@ -1,5 +1,5 @@
+import 'package:firebase_messaging_handler/firebase_messaging_handler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../enums/index.dart';
 
 extension NotificationPriorityEnumExtension on NotificationPriorityEnum {
   Priority get getConvertedPriority {
