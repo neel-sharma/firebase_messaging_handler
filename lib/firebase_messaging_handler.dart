@@ -1,12 +1,6 @@
 library notification_utility;
 
-import 'dart:developer';
-
-import 'package:firebase_messaging_handler/src/locator/locator.dart';
-
-import 'firebase_messaging_handler_platform_interface.dart';
 import 'src/index.dart';
-
 export 'src/enums/index.dart';
 export 'src/models/index.dart';
 
@@ -16,9 +10,6 @@ class FirebaseMessagingHandler {
   // Singleton instance
   static final FirebaseMessagingHandler instance =
       FirebaseMessagingHandler._internal();
-
-  // Indicates if the locator setup has been performed
-  bool _isLocatorSet = false;
 
   // Private constructor for internal use
   FirebaseMessagingHandler._internal();
@@ -30,8 +21,7 @@ class FirebaseMessagingHandler {
     required final String androidNotificationIconPath,
     required final Future<bool> Function(String fcmToken) updateTokenCallback,
   }) async {
-    await _ensureLocatorSetup();
-    return await locator<FirebaseMessagingUtility>().init(
+    return await FirebaseMessagingUtility.instance.init(
       senderId: senderId,
       androidChannelList: androidChannelList,
       androidNotificationIconPath: androidNotificationIconPath,
@@ -40,35 +30,18 @@ class FirebaseMessagingHandler {
   }
 
   Future<void> checkInitial() async {
-    await _ensureLocatorSetup();
-    await locator<FirebaseMessagingUtility>().checkInitial();
+    await FirebaseMessagingUtility.instance.checkInitial();
   }
 
   /// Disposes of the notification utility resources.
   Future<void> dispose() async {
-    if (_isLocatorSet) {
-      await locator<FirebaseMessagingUtility>().dispose();
-    }
+      await FirebaseMessagingUtility.instance.dispose();
+
   }
 
   /// Removes the stored FCM token.
   Future<void> clearToken() async {
-    if (_isLocatorSet) {
-      await locator<FirebaseMessagingUtility>().clearToken();
-    }
+      await FirebaseMessagingUtility.instance.clearToken();
   }
 
-  /// Ensures the service locator is set up before any operation.
-  Future<void> _ensureLocatorSetup() async {
-    if (!_isLocatorSet) {
-      await setupLocator();
-      _isLocatorSet = true;
-    } else {
-      log("${FirebaseMessagingHandlerConstants.logName}: Locator already setup, skipping");
-    }
-  }
-
-  Future<String?> getPlatformVersion() {
-    return FirebaseMessagingHandlerPlatform.instance.getPlatformVersion();
-  }
 }

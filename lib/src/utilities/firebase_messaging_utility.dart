@@ -1,45 +1,25 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/index.dart';
 import '../extensions/index.dart';
-import '../local_storage/index.dart';
 import '../models/index.dart';
-import 'firebase_messaging_app_state_utility.dart';
-import 'firebase_messaging_handler_platform_utility.dart';
 
-abstract class FirebaseMessagingUtility {
-  Future<Stream<NotificationData?>?> init({
-    required final String senderId,
-    required final List<NotificationChannelData> androidChannelList,
-    required final String androidNotificationIconPath,
-    required Future<bool> Function(String fcmToken) updateTokenCallback,
-  });
-
-  Future<String?> fetchFcmToken({required final String senderId});
-
-  Future<bool> requestPermission();
-
-  Future<void> dispose();
-
-  Future<void> clearToken();
-
-  Future<void> checkInitial();
-}
-
-class FirebaseMessagingUtilityImplementation
-    implements FirebaseMessagingUtility {
-  final FirebaseMessagingHandlerSharedPreferences sharedPref;
-  final FirebaseMessagingHandlerPlatformUtility platformUtil;
-
-  FirebaseMessagingUtilityImplementation({
-    required this.sharedPref,
-    required this.platformUtil,
-  });
+class FirebaseMessagingUtility {
+  static FirebaseMessagingUtility? _instance;
+  static FirebaseMessagingUtility get instance {
+    _instance ??= FirebaseMessagingUtility._internal();
+    return _instance!;
+  }
+  
+  FirebaseMessagingUtility._internal();
 
   late FirebaseMessaging firebaseMessagingInstance;
   final Set<int> openedNotifications = {};
@@ -49,8 +29,9 @@ class FirebaseMessagingUtilityImplementation
   StreamController<NotificationData?>? clickStreamController;
   Stream<NotificationData?>? clickStream;
   RemoteMessage? initialMessage;
+  SharedPreferences? sharedPref;
 
-  @override
+  
   Future<Stream<NotificationData?>?> init({
     required final String senderId,
     required final List<NotificationChannelData> androidChannelList,
@@ -62,13 +43,13 @@ class FirebaseMessagingUtilityImplementation
 
     final bool permissionsGranted = await requestPermission();
     if (permissionsGranted) {
-      final String? savedFcmToken = await sharedPref.getFcmToken();
+      final String? savedFcmToken = await getFcmToken();
       if (savedFcmToken == null) {
         final String? fcmToken = await fetchFcmToken(senderId: senderId);
         if (fcmToken != null) {
           final bool updateSuccessful = await updateTokenCallback(fcmToken);
           if (updateSuccessful) {
-            sharedPref.saveFcmToken(fcmToken);
+            saveFcmToken(fcmToken);
           }
         } else {
           log('Error fetching FCM Token!',
@@ -79,7 +60,6 @@ class FirebaseMessagingUtilityImplementation
         androidChannelList: androidChannelList,
         androidNotificationIconPath: androidNotificationIconPath,
       );
-      FirebaseMessagingAppStateUtility.instance.initialize();
       listenToForegroundNotifications(
         androidChannelList: androidChannelList,
         androidNotificationIconPath: androidNotificationIconPath,
@@ -91,12 +71,12 @@ class FirebaseMessagingUtilityImplementation
     return null;
   }
 
-  @override
+  
   Future<void> checkInitial() async {
     initialMessage = await FirebaseMessaging.instance.getInitialMessage();
   }
 
-  @override
+  
   Future<String?> fetchFcmToken({required final String senderId}) async {
     try {
       final String? fcmToken =
@@ -112,7 +92,7 @@ class FirebaseMessagingUtilityImplementation
     }
   }
 
-  @override
+  
   Future<bool> requestPermission() async {
     try {
       final NotificationSettings notificationSettings =
@@ -177,7 +157,7 @@ class FirebaseMessagingUtilityImplementation
     required final List<NotificationChannelData> androidChannelList,
     required final String androidNotificationIconPath,
   }) {
-    if (platformUtil.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       FirebaseMessaging.onMessage.listen((final RemoteMessage message) async {
         final RemoteNotification? notification = message.notification;
         // Ensure high priority if it's a foreground notification
@@ -314,15 +294,36 @@ class FirebaseMessagingUtilityImplementation
     return clickStream!;
   }
 
-  @override
+  
   Future<void> dispose() async {
     openedNotifications.clear();
     foregroundShownNotifications.clear();
     await flutterLocalNotificationsPlugin.cancelAll();
   }
 
-  @override
+  
   Future<void> clearToken() async {
-    await sharedPref.removeFcmToken();
+    sharedPref ??= await SharedPreferences.getInstance();
+    await removeFcmToken();
+  }
+
+
+  Future<void> saveFcmToken(String token) async {
+    sharedPref ??= await SharedPreferences.getInstance();
+    await sharedPref!.setString(
+      FirebaseMessagingHandlerConstants.fcmTokenPrefKey,
+      token,
+    );
+  }
+
+  Future<String?> getFcmToken() async {
+    sharedPref ??= await SharedPreferences.getInstance();
+    return Future.value(
+        sharedPref!.getString(FirebaseMessagingHandlerConstants.fcmTokenPrefKey));
+  }
+
+  Future<void> removeFcmToken() async {
+    sharedPref ??= await SharedPreferences.getInstance();
+    await sharedPref!.remove(FirebaseMessagingHandlerConstants.fcmTokenPrefKey);
   }
 }
