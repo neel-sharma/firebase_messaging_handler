@@ -8,7 +8,8 @@ abstract class FirebaseMessagingHandlerPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static FirebaseMessagingHandlerPlatform _instance = MethodChannelFirebaseMessagingHandler();
+  static FirebaseMessagingHandlerPlatform _instance =
+      MethodChannelFirebaseMessagingHandler();
 
   /// The default instance of [FirebaseMessagingHandlerPlatform] to use.
   ///

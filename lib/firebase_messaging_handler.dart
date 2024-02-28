@@ -19,7 +19,7 @@ class FirebaseMessagingHandler {
     required final String senderId,
     required final List<NotificationChannelData> androidChannelList,
     required final String androidNotificationIconPath,
-    required final Future<bool> Function(String fcmToken) updateTokenCallback,
+    final Future<bool> Function(String fcmToken)? updateTokenCallback,
   }) async {
     return await FirebaseMessagingUtility.instance.init(
       senderId: senderId,
@@ -35,13 +35,11 @@ class FirebaseMessagingHandler {
 
   /// Disposes of the notification utility resources.
   Future<void> dispose() async {
-      await FirebaseMessagingUtility.instance.dispose();
-
+    await FirebaseMessagingUtility.instance.dispose();
   }
 
   /// Removes the stored FCM token.
   Future<void> clearToken() async {
-      await FirebaseMessagingUtility.instance.clearToken();
+    await FirebaseMessagingUtility.instance.clearToken();
   }
-
 }

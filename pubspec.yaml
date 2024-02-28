@@ -1,6 +1,6 @@
 name: firebase_messaging_handler
 description: A comprehensive Flutter plugin for handling Firebase Cloud Messaging notifications with advanced features.
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/neel-sharma/firebase_messaging_handler
 
 environment:

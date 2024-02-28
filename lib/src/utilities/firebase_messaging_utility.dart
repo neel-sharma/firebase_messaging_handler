@@ -18,7 +18,7 @@ class FirebaseMessagingUtility {
     _instance ??= FirebaseMessagingUtility._internal();
     return _instance!;
   }
-  
+
   FirebaseMessagingUtility._internal();
 
   late FirebaseMessaging firebaseMessagingInstance;
@@ -31,12 +31,11 @@ class FirebaseMessagingUtility {
   RemoteMessage? initialMessage;
   SharedPreferences? sharedPref;
 
-  
   Future<Stream<NotificationData?>?> init({
     required final String senderId,
     required final List<NotificationChannelData> androidChannelList,
     required final String androidNotificationIconPath,
-    required Future<bool> Function(String fcmToken) updateTokenCallback,
+    Future<bool> Function(String fcmToken)? updateTokenCallback,
   }) async {
     firebaseMessagingInstance = FirebaseMessaging.instance;
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -44,12 +43,12 @@ class FirebaseMessagingUtility {
     final bool permissionsGranted = await requestPermission();
     if (permissionsGranted) {
       final String? savedFcmToken = await getFcmToken();
-      if (savedFcmToken == null) {
+      if (savedFcmToken == null && updateTokenCallback != null) {
         final String? fcmToken = await fetchFcmToken(senderId: senderId);
         if (fcmToken != null) {
           final bool updateSuccessful = await updateTokenCallback(fcmToken);
           if (updateSuccessful) {
-            saveFcmToken(fcmToken);
+            await saveFcmToken(fcmToken);
           }
         } else {
           log('Error fetching FCM Token!',
@@ -71,12 +70,10 @@ class FirebaseMessagingUtility {
     return null;
   }
 
-  
   Future<void> checkInitial() async {
     initialMessage = await FirebaseMessaging.instance.getInitialMessage();
   }
 
-  
   Future<String?> fetchFcmToken({required final String senderId}) async {
     try {
       final String? fcmToken =
@@ -92,7 +89,6 @@ class FirebaseMessagingUtility {
     }
   }
 
-  
   Future<bool> requestPermission() async {
     try {
       final NotificationSettings notificationSettings =
@@ -294,19 +290,16 @@ class FirebaseMessagingUtility {
     return clickStream!;
   }
 
-  
   Future<void> dispose() async {
     openedNotifications.clear();
     foregroundShownNotifications.clear();
     await flutterLocalNotificationsPlugin.cancelAll();
   }
 
-  
   Future<void> clearToken() async {
     sharedPref ??= await SharedPreferences.getInstance();
     await removeFcmToken();
   }
-
 
   Future<void> saveFcmToken(String token) async {
     sharedPref ??= await SharedPreferences.getInstance();
@@ -318,8 +311,8 @@ class FirebaseMessagingUtility {
 
   Future<String?> getFcmToken() async {
     sharedPref ??= await SharedPreferences.getInstance();
-    return Future.value(
-        sharedPref!.getString(FirebaseMessagingHandlerConstants.fcmTokenPrefKey));
+    return Future.value(sharedPref!
+        .getString(FirebaseMessagingHandlerConstants.fcmTokenPrefKey));
   }
 
   Future<void> removeFcmToken() async {

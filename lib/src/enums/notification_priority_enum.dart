@@ -5,7 +5,7 @@ enum NotificationPriorityEnum {
   high(1),
   max(2);
 
-  const  NotificationPriorityEnum(this.value);
+  const NotificationPriorityEnum(this.value);
 
   final int value;
 }

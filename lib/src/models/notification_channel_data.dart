@@ -4,7 +4,6 @@ import 'package:firebase_messaging_handler/src/enums/index.dart';
 import 'package:firebase_messaging_handler/src/extensions/index.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-
 class NotificationChannelData {
   final String id;
   final String name;
@@ -20,21 +19,20 @@ class NotificationChannelData {
   final bool showBadge;
   final NotificationPriorityEnum priority;
 
-  NotificationChannelData({
-    required this.id,
-    required this.name,
-    this.description,
-    this.groupId,
-    this.importance = NotificationImportanceEnum.defaultImportance,
-    this.playSound = true,
-    this.soundPath,
-    this.enableVibration = true,
-    this.enableLights = false,
-    this.vibrationPattern,
-    this.ledColor,
-    this.showBadge = true,
-    this.priority = NotificationPriorityEnum.defaultPriority
-  });
+  NotificationChannelData(
+      {required this.id,
+      required this.name,
+      this.description,
+      this.groupId,
+      this.importance = NotificationImportanceEnum.defaultImportance,
+      this.playSound = true,
+      this.soundPath,
+      this.enableVibration = true,
+      this.enableLights = false,
+      this.vibrationPattern,
+      this.ledColor,
+      this.showBadge = true,
+      this.priority = NotificationPriorityEnum.defaultPriority});
 
   AndroidNotificationChannel toAndroidNotificationChannel() {
     return AndroidNotificationChannel(
@@ -54,7 +52,4 @@ class NotificationChannelData {
       ledColor: ledColor,
     );
   }
-
 }
-
-

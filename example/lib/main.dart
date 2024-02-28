@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging_handler/firebase_messaging_handler.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +40,7 @@ class NotificationScreen extends StatefulWidget {
 class _NotificationScreenState extends State<NotificationScreen> {
   late FirebaseMessagingHandler _messagingHandler;
   String? _currentPayload;
+  bool _showClearButton = false;
 
   @override
   void initState() {
@@ -65,19 +68,47 @@ class _NotificationScreenState extends State<NotificationScreen> {
           textAlign: TextAlign.center,
         ),
       ),
-      floatingActionButton: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-        ),
-        child: const Text(
-          'Clear',
-          style: TextStyle(color: Colors.white),
-        ),
-        onPressed: () {
-          setState(() {
-            _currentPayload = null;
-          });
-        },
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (_showClearButton)
+            Padding(
+              padding: const EdgeInsets.only(right: 20),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                ),
+                child: const Text(
+                  'Clear Token',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onPressed: () async {
+                  //For testing logout behaviour where we clear the currently saved FCM Token from
+                  //our Shared Preferences. So, that the update callback gets executed again. Whenever
+                  //someone logs in again.
+
+                  await _messagingHandler.clearToken();
+                  setState(() {
+                    _showClearButton = false;
+                  });
+                },
+              ),
+            ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+            ),
+            child: const Text(
+              'Clear Payload',
+              style: TextStyle(color: Colors.white),
+            ),
+            onPressed: () {
+              setState(() {
+                _currentPayload = null;
+              });
+            },
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
@@ -92,18 +123,22 @@ class _NotificationScreenState extends State<NotificationScreen> {
           name: 'name can be anything',
           importance: NotificationImportanceEnum.max,
           priority: NotificationPriorityEnum.high,
-        )
-        //NotificationChannelData(),
+        ),
       ],
       androidNotificationIconPath: '@drawable/ic_notification',
       senderId: DefaultFirebaseOptions.android.messagingSenderId,
       updateTokenCallback: (final String fcmToken) async {
-        print('FCM Token: $fcmToken');
+        log('FCM Token: $fcmToken');
+        setState(() {
+          _showClearButton = true;
+        });
+        //Use print for release mode FCM Debugging
+        //print('FCM Token: $fcmToken');
 
         //Returning true lets the utility know that the token has been saved by the backend.
         //And so this function should not be called till the token has been cleared with the removeToken()
         //Note: Re-installing or clearing data will also recall this function.
-        return Future.value(false);
+        return Future.value(true);
       },
     );
 

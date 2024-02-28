@@ -5,11 +5,13 @@ import 'package:firebase_messaging_handler/firebase_messaging_handler_method_cha
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodChannelFirebaseMessagingHandler platform = MethodChannelFirebaseMessagingHandler();
+  MethodChannelFirebaseMessagingHandler platform =
+      MethodChannelFirebaseMessagingHandler();
   const MethodChannel channel = MethodChannel('firebase_messaging_handler');
 
   setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
       channel,
       (MethodCall methodCall) async {
         return '42';
@@ -18,7 +20,8 @@ void main() {
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
   });
 
   test('getPlatformVersion', () async {

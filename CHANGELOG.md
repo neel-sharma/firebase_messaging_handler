@@ -1,3 +1,3 @@
-## 0.0.2
+## 0.0.3
 
-* TODO: increased compatibility with lower SDK and dependency versions.
+* TODO: FCM Token Caching fix.
