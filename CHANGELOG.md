@@ -1,3 +1,3 @@
-## 0.0.3
+## 0.0.4
 
-* TODO: FCM Token Caching fix.
+* TODO: Added clear token testing button for example app and minor analysis improvements

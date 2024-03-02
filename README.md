@@ -18,7 +18,7 @@ Tired of the complexities involved in handling Firebase Cloud Messaging (FCM) no
 
 Ensure the following permissions and receivers are added within the `<manifest>` section of your `android/app/src/main/AndroidManifest.xml` file:
 
-    ```xml
+    ```android/app/src/main/AndroidManifest.xml
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.VIBRATE" /> 
     
@@ -33,6 +33,24 @@ Ensure the following permissions and receivers are added within the `<manifest>`
             </intent-filter>
         </receiver>
     </application>
+    ```
+
+ *For In-App Messaging just add firebase_in_app_messaging in your yaml.
+ And enable multidex support as follows:*   
+    ```android/app/build.gradle
+    android {
+    defaultConfig {
+        ...
+        multiDexEnabled true
+        ...
+    }
+    ...
+    dependencies {
+    ...
+    implementation "androidx.multidex:multidex:2.0.1"
+    ...
+    }
+    ```
 
 **IOS**
 Make sure that the ios completed in developers.apple.com and APNs config is added in Firebase > Project Settings > Cloud Messaging
@@ -45,8 +63,10 @@ Complete the standard Firebase initialization process for your Flutter project.
 5.**Crucial Step:**
 Immediately following Firebase initialization within your app's `main` function, add this line:
 
-   ```dart
+   ```main.dart
+   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform,);
    await FirebaseMessagingHandler.instance.checkInitial(); 
+   ```
    
 **Sample Functions**
 
@@ -56,7 +76,7 @@ Immediately following Firebase initialization within your app's `main` function,
 
   **Example Usage:**
 
-   ```dart
+   ```home_screen.dart (anywhere in the application after Firebase Initialization)
    import 'package:firebase_messaging_handler/firebase_messaging_handler.dart';
   
    ... 
