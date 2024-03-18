@@ -1,3 +1,3 @@
-## 0.0.4
+## 0.0.5
 
-* TODO: Added clear token testing button for example app and minor analysis improvements
+* TODO: Click Stream dispose fix
