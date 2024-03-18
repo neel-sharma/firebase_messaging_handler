@@ -294,6 +294,7 @@ class FirebaseMessagingUtility {
     openedNotifications.clear();
     foregroundShownNotifications.clear();
     await flutterLocalNotificationsPlugin.cancelAll();
+    clickStreamController?.close();
   }
 
   Future<void> clearToken() async {
