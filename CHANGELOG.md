@@ -1,3 +1,3 @@
-## 0.0.5
+## 0.0.6
 
-* TODO: Click Stream dispose fix
+* TODO: Stream broadcast added to prevent already listened error

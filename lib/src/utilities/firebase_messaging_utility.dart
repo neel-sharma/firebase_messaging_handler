@@ -283,7 +283,7 @@ class FirebaseMessagingUtility {
 
   Stream<NotificationData?> getNotificationClickStream() {
     if (clickStreamController == null || clickStream == null) {
-      clickStreamController = StreamController<NotificationData?>();
+      clickStreamController = StreamController<NotificationData?>.broadcast();
       clickStream = clickStreamController!.stream;
     }
 
@@ -294,7 +294,7 @@ class FirebaseMessagingUtility {
     openedNotifications.clear();
     foregroundShownNotifications.clear();
     await flutterLocalNotificationsPlugin.cancelAll();
-    clickStreamController?.close();
+    await clickStreamController?.close();
   }
 
   Future<void> clearToken() async {

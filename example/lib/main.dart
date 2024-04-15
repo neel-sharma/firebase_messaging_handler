@@ -61,6 +61,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
       appBar: AppBar(
         title: const Text('Handler Example'),
         centerTitle: true,
+        actions: [
+          InkWell(
+            onTap: () async {
+              await _disposeFirebaseMessagingHandler();
+              await _initFirebaseMessagingHandler();
+            },
+            child: const Padding(
+              padding: EdgeInsets.only(
+                right: 20,
+                left: 10,
+              ),
+              child: Icon(Icons.restart_alt),
+            ),
+          ),
+        ],
       ),
       body: Center(
         child: Text(
