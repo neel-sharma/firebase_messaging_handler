@@ -1,3 +1,3 @@
-## 0.0.8
+## 0.0.9
 
-* TODO: Dependency constraints updated
+* TODO: Dispose Fix and Terminated Notification Click Fix

@@ -14,6 +14,7 @@ import '../models/index.dart';
 
 class FirebaseMessagingUtility {
   static FirebaseMessagingUtility? _instance;
+
   static FirebaseMessagingUtility get instance {
     _instance ??= FirebaseMessagingUtility._internal();
     return _instance!;
@@ -63,7 +64,7 @@ class FirebaseMessagingUtility {
         androidChannelList: androidChannelList,
         androidNotificationIconPath: androidNotificationIconPath,
       );
-      await handleBackgroundTerminatedNotifications();
+      await handleBackgroundNotifications();
 
       return getNotificationClickStream();
     }
@@ -77,7 +78,7 @@ class FirebaseMessagingUtility {
   Future<String?> fetchFcmToken({required final String senderId}) async {
     try {
       final String? fcmToken =
-          await firebaseMessagingInstance.getToken(vapidKey: senderId);
+      await firebaseMessagingInstance.getToken(vapidKey: senderId);
 
       return fcmToken;
     } catch (error, stack) {
@@ -92,7 +93,7 @@ class FirebaseMessagingUtility {
   Future<bool> requestPermission() async {
     try {
       final NotificationSettings notificationSettings =
-          await firebaseMessagingInstance.requestPermission();
+      await firebaseMessagingInstance.requestPermission();
 
       return notificationSettings.authorizationStatus ==
           AuthorizationStatus.authorized;
@@ -112,7 +113,7 @@ class FirebaseMessagingUtility {
   }) async {
     try {
       final InitializationSettings initializationSettings =
-          InitializationSettings(
+      InitializationSettings(
         android: AndroidInitializationSettings(androidNotificationIconPath),
         iOS: const DarwinInitializationSettings(
           requestAlertPermission: true,
@@ -121,7 +122,7 @@ class FirebaseMessagingUtility {
       );
 
       final bool? isInitialized =
-          await flutterLocalNotificationsPlugin.initialize(
+      await flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
         onDidReceiveNotificationResponse: onSelectNotification,
       );
@@ -129,9 +130,9 @@ class FirebaseMessagingUtility {
         for (final NotificationChannelData channel in androidChannelList) {
           await flutterLocalNotificationsPlugin
               .resolvePlatformSpecificImplementation<
-                  AndroidFlutterLocalNotificationsPlugin>()
+              AndroidFlutterLocalNotificationsPlugin>()
               ?.createNotificationChannel(
-                  channel.toAndroidNotificationChannel());
+              channel.toAndroidNotificationChannel());
         }
 
         await firebaseMessagingInstance
@@ -164,7 +165,7 @@ class FirebaseMessagingUtility {
           // Find the appropriate channel (ensure priority is high)
           AndroidNotificationChannel? selectedChannel;
           for (final NotificationChannelData channelData
-              in androidChannelList) {
+          in androidChannelList) {
             if (channelData.id == message.notification!.android!.channelId) {
               // Adapt channel properties for foreground notification
               selectedChannel = channelData.toAndroidNotificationChannel();
@@ -186,12 +187,7 @@ class FirebaseMessagingUtility {
     }
   }
 
-  Future<void> handleBackgroundTerminatedNotifications() async {
-    if (initialMessage != null) {
-      getNotificationClickStream();
-      processNotification(initialMessage!);
-    }
-
+  Future<void> handleBackgroundNotifications() async {
     FirebaseMessaging.onMessageOpenedApp.listen(processNotification);
   }
 
@@ -248,7 +244,7 @@ class FirebaseMessagingUtility {
               selectedChannel?.name ??
                   message.notification!.android!.channelId!,
               importance:
-                  selectedChannel?.importance ?? Importance.defaultImportance,
+              selectedChannel?.importance ?? Importance.defaultImportance,
               priority: priority ?? Priority.defaultPriority,
               icon: androidNotificationIconPath,
             ),
@@ -268,8 +264,8 @@ class FirebaseMessagingUtility {
   }
 
   Future<void> onSelectNotification(
-    final NotificationResponse response,
-  ) async {
+      final NotificationResponse response,
+      ) async {
     //Note: The Remote Message hash code is stored in 'response.id'
     if (response.notificationResponseType ==
         NotificationResponseType.selectedNotification) {
@@ -286,6 +282,13 @@ class FirebaseMessagingUtility {
       clickStreamController = StreamController<NotificationData?>.broadcast();
       clickStream = clickStreamController!.stream;
     }
+    Future.delayed(const Duration(milliseconds: 100)).then((_) {
+      if (initialMessage != null) {
+        getNotificationClickStream();
+        processNotification(initialMessage!);
+        initialMessage = null;
+      }
+    });
 
     return clickStream!;
   }
