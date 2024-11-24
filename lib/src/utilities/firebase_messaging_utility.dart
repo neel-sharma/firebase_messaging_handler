@@ -14,21 +14,44 @@ import '../models/index.dart';
 
 class FirebaseMessagingUtility {
   static FirebaseMessagingUtility? _instance;
+
+  /// Singleton instance of the FirebaseMessagingUtility.
   static FirebaseMessagingUtility get instance {
     _instance ??= FirebaseMessagingUtility._internal();
     return _instance!;
   }
 
+  /// Private constructor for singleton pattern.
   FirebaseMessagingUtility._internal();
 
+  /// Instance of Firebase Messaging.
   late FirebaseMessaging firebaseMessagingInstance;
+
+  /// Stores IDs of notifications opened during the session.
   final Set<int> openedNotifications = {};
+
+  /// Stores IDs of notifications shown in the foreground.
   final Set<int> foregroundShownNotifications = {};
+
+  /// Stores session-specific notification IDs.
+  static Set<int> sessionNotifications = {};
+
+  /// Instance of Flutter Local Notifications Plugin.
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
+  /// Callback for handling notification clicks.
   Function? onClickCallback;
+
+  /// Stream controller for notification click events.
   StreamController<NotificationData?>? clickStreamController;
+
+  /// Stream for listening to notification click events.
   Stream<NotificationData?>? clickStream;
+
+  /// Stores the initial notification message if app was opened via notification.
   RemoteMessage? initialMessage;
+
+  /// Shared Preferences instance for storing persistent data.
   SharedPreferences? sharedPref;
 
   Future<Stream<NotificationData?>?> init({
@@ -45,14 +68,16 @@ class FirebaseMessagingUtility {
       final String? savedFcmToken = await getFcmToken();
       if (savedFcmToken == null && updateTokenCallback != null) {
         final String? fcmToken = await fetchFcmToken(senderId: senderId);
+
         if (fcmToken != null) {
           final bool updateSuccessful = await updateTokenCallback(fcmToken);
           if (updateSuccessful) {
             await saveFcmToken(fcmToken);
           }
         } else {
-          log('Error fetching FCM Token!',
-              name: FirebaseMessagingHandlerConstants.logName);
+          _logMessage(
+            'Error fetching FCM Token!',
+          );
         }
       }
       await initializeLocalNotifications(
@@ -71,19 +96,37 @@ class FirebaseMessagingUtility {
   }
 
   Future<void> checkInitial() async {
+    final restoredMessages = await restoreSessionNotifications();
     initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+
+    if (initialMessage != null) {
+      final int messageHash = initialMessage!.messageId.hashCode;
+      final matchingMessage = restoredMessages.firstWhere(
+        (message) {
+          return message.messageId.hashCode == messageHash;
+        },
+        orElse: () => initialMessage!,
+      );
+
+      if (matchingMessage != initialMessage) {
+        initialMessage = matchingMessage;
+      }
+    }
+    await clearSessionNotifications();
   }
 
   Future<String?> fetchFcmToken({required final String senderId}) async {
     try {
       final String? fcmToken =
           await firebaseMessagingInstance.getToken(vapidKey: senderId);
-
       return fcmToken;
     } catch (error, stack) {
-      log('FCM Error: $error', name: FirebaseMessagingHandlerConstants.logName);
-      log('FCM Error Stack: $stack',
-          name: FirebaseMessagingHandlerConstants.logName);
+      _logMessage(
+        'FCM Error: $error',
+      );
+      _logMessage(
+        'FCM Error Stack: $stack',
+      );
 
       return null;
     }
@@ -97,10 +140,12 @@ class FirebaseMessagingUtility {
       return notificationSettings.authorizationStatus ==
           AuthorizationStatus.authorized;
     } catch (error, stack) {
-      log('FCM asking for notification permission.\n$error',
-          name: FirebaseMessagingHandlerConstants.logName);
-      log('FCM Error Stack: $stack',
-          name: FirebaseMessagingHandlerConstants.logName);
+      _logMessage(
+        'FCM asking for notification permission.\n$error',
+      );
+      _logMessage(
+        'FCM Error Stack: $stack',
+      );
 
       return false;
     }
@@ -142,10 +187,12 @@ class FirebaseMessagingUtility {
         );
       }
     } catch (error, stack) {
-      log('Init Local Notifications Error: $error',
-          name: FirebaseMessagingHandlerConstants.logName);
-      log('Error Stack: $stack',
-          name: FirebaseMessagingHandlerConstants.logName);
+      _logMessage(
+        'Init Local Notifications Error: $error',
+      );
+      _logMessage(
+        'Error Stack: $stack',
+      );
     }
   }
 
@@ -153,36 +200,47 @@ class FirebaseMessagingUtility {
     required final List<NotificationChannelData> androidChannelList,
     required final String androidNotificationIconPath,
   }) {
-    if (!kIsWeb && Platform.isAndroid) {
-      FirebaseMessaging.onMessage.listen((final RemoteMessage message) async {
-        final RemoteNotification? notification = message.notification;
-        // Ensure high priority if it's a foreground notification
-        if (notification != null &&
-            !foregroundShownNotifications.contains(notification.hashCode)) {
-          foregroundShownNotifications.add(notification.hashCode);
+    if (!kIsWeb) {
+      if (Platform.isAndroid) {
+        FirebaseMessaging.onMessage.listen(
+          (final RemoteMessage message) async {
+            final RemoteNotification? notification = message.notification;
 
-          // Find the appropriate channel (ensure priority is high)
-          AndroidNotificationChannel? selectedChannel;
-          for (final NotificationChannelData channelData
-              in androidChannelList) {
-            if (channelData.id == message.notification!.android!.channelId) {
-              // Adapt channel properties for foreground notification
-              selectedChannel = channelData.toAndroidNotificationChannel();
-              selectedChannel.copyWith(
-                importance: Importance.max,
+            await saveNotification(message);
+
+            if (notification != null &&
+                !foregroundShownNotifications.contains(notification.hashCode)) {
+              foregroundShownNotifications.add(notification.hashCode);
+
+              AndroidNotificationChannel? selectedChannel;
+              for (final NotificationChannelData channelData
+                  in androidChannelList) {
+                if (channelData.id ==
+                    message.notification!.android!.channelId) {
+                  selectedChannel = channelData.toAndroidNotificationChannel();
+                  selectedChannel.copyWith(
+                    importance: Importance.max,
+                  );
+
+                  break;
+                }
+              }
+
+              await _showLocalNotification(
+                message: message,
+                androidChannelList: androidChannelList,
+                androidNotificationIconPath: androidNotificationIconPath,
               );
-
-              break;
             }
-          }
-
-          await _showLocalNotification(
-            message: message,
-            androidChannelList: androidChannelList,
-            androidNotificationIconPath: androidNotificationIconPath,
-          );
-        }
-      });
+          },
+        );
+      } else {
+        FirebaseMessaging.onMessage.listen(
+          (final RemoteMessage message) async {
+            await saveNotification(message);
+          },
+        );
+      }
     }
   }
 
@@ -192,7 +250,14 @@ class FirebaseMessagingUtility {
       processNotification(initialMessage!);
     }
 
+    FirebaseMessaging.onBackgroundMessage(_onBackgroundMessage);
+
     FirebaseMessaging.onMessageOpenedApp.listen(processNotification);
+  }
+
+  @pragma('vm:entry-point')
+  static Future<void> _onBackgroundMessage(RemoteMessage message) async {
+    await saveNotification(message);
   }
 
   void processNotification(final RemoteMessage message,
@@ -232,10 +297,12 @@ class FirebaseMessagingUtility {
         }
 
         if (selectedChannel == null) {
-          log('The Channel ID from the notification is not matching the any of the Channel IDs set in app.',
-              name: FirebaseMessagingHandlerConstants.logName);
-          log('Please make sure you are sending the Channel ID which you are setting in androidChannelList',
-              name: FirebaseMessagingHandlerConstants.logName);
+          _logMessage(
+            'The Channel ID from the notification is not matching the any of the Channel IDs set in app.',
+          );
+          _logMessage(
+            'Please make sure you are sending the Channel ID which you are setting in androidChannelList',
+          );
         }
 
         await flutterLocalNotificationsPlugin.show(
@@ -256,14 +323,17 @@ class FirebaseMessagingUtility {
           payload: jsonEncode(message.data),
         );
       } else {
-        log('Show Local Notification for Android Error: No Channel ID found',
-            name: FirebaseMessagingHandlerConstants.logName);
+        _logMessage(
+          'Show Local Notification for Android Error: No Channel ID found',
+        );
       }
     } catch (error, stack) {
-      log('Init Local Notifications Error: $error',
-          name: FirebaseMessagingHandlerConstants.logName);
-      log('Error Stack: $stack',
-          name: FirebaseMessagingHandlerConstants.logName);
+      _logMessage(
+        'Init Local Notifications Error: $error',
+      );
+      _logMessage(
+        'Error Stack: $stack',
+      );
     }
   }
 
@@ -319,5 +389,73 @@ class FirebaseMessagingUtility {
   Future<void> removeFcmToken() async {
     sharedPref ??= await SharedPreferences.getInstance();
     await sharedPref!.remove(FirebaseMessagingHandlerConstants.fcmTokenPrefKey);
+  }
+
+  static Future<void> saveNotification(RemoteMessage message) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? storedData =
+        prefs.getString(FirebaseMessagingHandlerConstants.sessionPrefKey);
+
+    // Parse existing stored messages
+    final List<Map<String, dynamic>> currentMessages = storedData != null
+        ? List<Map<String, dynamic>>.from(jsonDecode(storedData))
+        : [];
+
+    // Check if the message is already saved (using hash code)
+    final int messageHash = message.messageId.hashCode;
+    final bool isDuplicate = currentMessages.any((msg) {
+      return msg['messageId']?.hashCode == messageHash;
+    });
+
+    if (!isDuplicate) {
+      // Add the new message
+      currentMessages.add(message.toMap());
+
+      // Save updated list to SharedPreferences
+      prefs.setString(
+        FirebaseMessagingHandlerConstants.sessionPrefKey,
+        jsonEncode(currentMessages),
+      );
+
+      // Also track the message hash in session memory (optional)
+      sessionNotifications.add(messageHash);
+    }
+  }
+
+  Future<List<RemoteMessage>> restoreSessionNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedData =
+        prefs.getString(FirebaseMessagingHandlerConstants.sessionPrefKey);
+
+    if (storedData != null) {
+      // Deserialize the stored list of RemoteMessage objects
+      final List<dynamic> jsonList = jsonDecode(storedData);
+      final List<RemoteMessage> restoredMessages = jsonList
+          .cast<Map<String, dynamic>>()
+          .map((data) => RemoteMessage.fromMap(data))
+          .toList();
+
+      // Add to sessionNotifications
+      for (final RemoteMessage message in restoredMessages) {
+        sessionNotifications.add(message.messageId.hashCode);
+      }
+
+      _logMessage(
+          'Restored ${restoredMessages.length} notifications from session.');
+      return restoredMessages;
+    }
+
+    return [];
+  }
+
+  Future<void> clearSessionNotifications() async {
+    sessionNotifications.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('session_notifications');
+    _logMessage('Session notifications cleared.');
+  }
+
+  void _logMessage(String message) {
+    log(message, name: FirebaseMessagingHandlerConstants.logName);
   }
 }

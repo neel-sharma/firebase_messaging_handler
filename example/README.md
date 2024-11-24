@@ -1,36 +1,16 @@
-example
-An example application for the implementation of Notification Utility using Firebase Messaging Handler Plugin.
+# notification_utility_example_app
 
-Getting Started
-To set up and run the example application, follow these steps:
+A new Flutter project.
 
-1. Create a Firebase Project
+## Getting Started
 
-   Go to the Firebase Console.
-   Click on "Add project" and follow the instructions to create a new Firebase project.
-   Once the project is created, navigate to the project dashboard.
+This project is a starting point for a Flutter application.
 
-2. Install the Firebase CLI tools if you haven't already:
+A few resources to get you started if this is your first Flutter project:
 
-   npm install -g firebase-tools
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-3. Log in to your Firebase account using the Firebase CLI:
- 
-   firebase login
-
-4. Activate the FlutterFire CLI to configure Firebase for your Flutter project:
-
-   dart pub global activate flutterfire_cli
-
-5. Configure Firebase for Your Flutter Project. Navigate to the root directory of your example application and run the following command to configure Firebase:
-
-   flutterfire configure
-
-   This command will guide you through selecting your Firebase project and configuring the necessary files. Follow these steps:
-
-   Select your Firebase project from the list.
-   Select the platforms you are developing for (iOS, Android, etc.).
-   The CLI will automatically generate and add the necessary Firebase configuration files (google-services.json for Android and GoogleService-Info.plist for iOS) to your Flutter project.
-
-6. Run the Example Application
- 
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Notification Utility Example',
+      title: 'Firebase Messaging Handler Example',
       home: NotificationScreen(),
     );
   }
