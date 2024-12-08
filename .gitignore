@@ -27,4 +27,6 @@ migrate_working_dir/
 **/doc/api/
 .dart_tool/
 build/
+/example/firebase.json
+/example/android/app/google-services.json
 /example/lib/firebase_options.dart

@@ -22,6 +22,9 @@ Ensure the following permissions and receivers are added within the `<manifest>`
     <uses-permission android:name="android.permission.VIBRATE" /> 
     
     <application>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
             <intent-filter>
@@ -50,7 +53,22 @@ Ensure the following permissions and receivers are added within the `<manifest>`
     }
 
 **IOS**
-Make sure that the ios completed in developers.apple.com and APNs config is added in Firebase > Project Settings > Cloud Messaging
+1. **Apple Developer Portal Configuration**:
+    - Register your app in **Certificates, Identifiers & Profiles**.
+    - Add the **Push Notifications** capability to your app identifier.
+    - Generate an APNs key or certificate and upload it to **Firebase Console** > **Project Settings** > **Cloud Messaging**.
+
+2. **Firebase Initialization**:
+    - Ensure Firebase is properly initialized in your `AppDelegate`.
+
+3. **Notification Permissions**:
+    - Ensure the app requests notification permissions at launch.
+
+4. **Capabilities**:
+    - Enable **Push Notifications** capability in Xcode.
+    - Add **Background Modes** capability and check both:
+        - **Background Fetch**
+        - **Remote Notifications**
 
 3.**Firebase Initialization:**
 Complete the standard Firebase initialization process for your Flutter project.

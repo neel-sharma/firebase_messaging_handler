@@ -42,4 +42,19 @@ class FirebaseMessagingHandler {
   Future<void> clearToken() async {
     await FirebaseMessagingUtility.instance.clearToken();
   }
+
+  /// Subscribes the device to the specified FCM topic.
+  Future<void> subscribeToTopic(String topic) async {
+    await FirebaseMessagingUtility.instance.subscribeToTopic(topic);
+  }
+
+  /// Unsubscribes the device from the specified FCM topic.
+  Future<void> unsubscribeFromTopic(String topic) async {
+    await FirebaseMessagingUtility.instance.unsubscribeFromTopic(topic);
+  }
+
+  /// Unsubscribes the device from all FCM topics and clears the token.
+  Future<void> unsubscribeFromAllTopics() async {
+    await FirebaseMessagingUtility.instance.unsubscribeFromAllTopics();
+  }
 }

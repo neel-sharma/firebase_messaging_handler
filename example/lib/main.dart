@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Notification Utility Example',
+      title: 'Firebase Messaging Handler Example',
       home: NotificationScreen(),
     );
   }
@@ -65,6 +65,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           InkWell(
             onTap: () async {
               await _disposeFirebaseMessagingHandler();
+              await _messagingHandler.clearToken();
               await _initFirebaseMessagingHandler();
             },
             child: const Padding(
@@ -140,7 +141,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
           priority: NotificationPriorityEnum.high,
         ),
       ],
+      ///When ever you are referencing an android asset here please
+      ///make sure you set is as default in AndroidManifest or else it may be removed
+      ///via Proguard while running a release build.
       androidNotificationIconPath: '@drawable/ic_notification',
+      ///Sender id is always same for both Android and iOS
       senderId: DefaultFirebaseOptions.android.messagingSenderId,
       updateTokenCallback: (final String fcmToken) async {
         log('FCM Token: $fcmToken');

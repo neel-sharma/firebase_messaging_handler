@@ -1,3 +1,3 @@
-## 0.0.9
+## 0.1.0
 
-* TODO: Dispose Fix and Terminated Notification Click Fix
+* TODO: Terminated state fixes and added subscription methods for topics
