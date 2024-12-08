@@ -40,7 +40,7 @@ class NotificationScreen extends StatefulWidget {
 class _NotificationScreenState extends State<NotificationScreen> {
   late FirebaseMessagingHandler _messagingHandler;
   String? _currentPayload;
-  bool _showClearButton = false;
+  bool _showClearButton = true;
 
   @override
   void initState() {
@@ -153,7 +153,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           _showClearButton = true;
         });
         //Use print for release mode FCM Debugging
-        //print('FCM Token: $fcmToken');
+        print('FCM Token: $fcmToken');
 
         //Returning true lets the utility know that the token has been saved by the backend.
         //And so this function should not be called till the token has been cleared with the removeToken()
@@ -175,6 +175,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _disposeFirebaseMessagingHandler() async {
+    _messagingHandler.clearToken();
     _messagingHandler.dispose();
   }
 }
