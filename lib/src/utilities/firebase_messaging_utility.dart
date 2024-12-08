@@ -96,23 +96,24 @@ class FirebaseMessagingUtility {
   }
 
   Future<void> checkInitial() async {
-    final restoredMessages = await restoreSessionNotifications();
     initialMessage = await FirebaseMessaging.instance.getInitialMessage();
 
-    if (initialMessage != null) {
-      final int messageHash = initialMessage!.messageId.hashCode;
-      final matchingMessage = restoredMessages.firstWhere(
-        (message) {
-          return message.messageId.hashCode == messageHash;
-        },
-        orElse: () => initialMessage!,
-      );
-
-      if (matchingMessage != initialMessage) {
-        initialMessage = matchingMessage;
-      }
-    }
-    await clearSessionNotifications();
+    ///Alternative approach to get the payload from previous session cache
+    // if (initialMessage != null) {
+    //   final restoredMessages = await restoreSessionNotifications();
+    //   final int messageHash = initialMessage!.messageId.hashCode;
+    //   final matchingMessage = restoredMessages.firstWhere(
+    //     (message) {
+    //       return message.messageId.hashCode == messageHash;
+    //     },
+    //     orElse: () => initialMessage!,
+    //   );
+    //
+    //   if (matchingMessage != initialMessage) {
+    //     initialMessage = matchingMessage;
+    //   }
+    // }
+    //await clearSessionNotifications();
   }
 
   Future<String?> fetchFcmToken({required final String senderId}) async {
@@ -247,7 +248,10 @@ class FirebaseMessagingUtility {
   Future<void> handleBackgroundTerminatedNotifications() async {
     if (initialMessage != null) {
       getNotificationClickStream();
-      processNotification(initialMessage!);
+      processNotification(
+        initialMessage!,
+        isFromTerminated: true,
+      );
     }
 
     FirebaseMessaging.onBackgroundMessage(_onBackgroundMessage);
@@ -273,11 +277,19 @@ class FirebaseMessagingUtility {
 
   void addNotificationClickStreamEvent(final Map<String, dynamic> payload,
       {bool isFromTerminated = false}) {
-    clickStreamController?.add(
-      NotificationData(
-        payload: payload,
-      ),
-    );
+    if (isFromTerminated) {
+      clickStream?.startWith(
+        NotificationData(
+          payload: payload,
+        ),
+      );
+    } else {
+      clickStreamController?.add(
+        NotificationData(
+          payload: payload,
+        ),
+      );
+    }
   }
 
   Future<void> _showLocalNotification({
@@ -392,70 +404,121 @@ class FirebaseMessagingUtility {
   }
 
   static Future<void> saveNotification(RemoteMessage message) async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? storedData =
-        prefs.getString(FirebaseMessagingHandlerConstants.sessionPrefKey);
-
-    // Parse existing stored messages
-    final List<Map<String, dynamic>> currentMessages = storedData != null
-        ? List<Map<String, dynamic>>.from(jsonDecode(storedData))
-        : [];
-
-    // Check if the message is already saved (using hash code)
-    final int messageHash = message.messageId.hashCode;
-    final bool isDuplicate = currentMessages.any((msg) {
-      return msg['messageId']?.hashCode == messageHash;
-    });
-
-    if (!isDuplicate) {
-      // Add the new message
-      currentMessages.add(message.toMap());
-
-      // Save updated list to SharedPreferences
-      prefs.setString(
-        FirebaseMessagingHandlerConstants.sessionPrefKey,
-        jsonEncode(currentMessages),
-      );
-
-      // Also track the message hash in session memory (optional)
-      sessionNotifications.add(messageHash);
-    }
+    ///Alternative approach to get the payload from previous session cache
+    // final prefs = await SharedPreferences.getInstance();
+    // final String? storedData =
+    //     prefs.getString(FirebaseMessagingHandlerConstants.sessionPrefKey);
+    //
+    // // Parse existing stored messages
+    // final List<Map<String, dynamic>> currentMessages = storedData != null
+    //     ? List<Map<String, dynamic>>.from(jsonDecode(storedData))
+    //     : [];
+    //
+    // // Check if the message is already saved (using hash code)
+    // final int messageHash = message.messageId.hashCode;
+    // final bool isDuplicate = currentMessages.any((msg) {
+    //   return msg['messageId']?.hashCode == messageHash;
+    // });
+    //
+    // if (!isDuplicate) {
+    //   // Add the new message
+    //   currentMessages.add(message.toMap());
+    //
+    //   // Save updated list to SharedPreferences
+    //   prefs.setString(
+    //     FirebaseMessagingHandlerConstants.sessionPrefKey,
+    //     jsonEncode(currentMessages),
+    //   );
+    //
+    //   // Also track the message hash in session memory (optional)
+    //   sessionNotifications.add(messageHash);
+    // }
   }
 
   Future<List<RemoteMessage>> restoreSessionNotifications() async {
-    final prefs = await SharedPreferences.getInstance();
-    final storedData =
-        prefs.getString(FirebaseMessagingHandlerConstants.sessionPrefKey);
-
-    if (storedData != null) {
-      // Deserialize the stored list of RemoteMessage objects
-      final List<dynamic> jsonList = jsonDecode(storedData);
-      final List<RemoteMessage> restoredMessages = jsonList
-          .cast<Map<String, dynamic>>()
-          .map((data) => RemoteMessage.fromMap(data))
-          .toList();
-
-      // Add to sessionNotifications
-      for (final RemoteMessage message in restoredMessages) {
-        sessionNotifications.add(message.messageId.hashCode);
-      }
-
-      _logMessage(
-          'Restored ${restoredMessages.length} notifications from session.');
-      return restoredMessages;
-    }
+    ///Alternative approach to get the payload from previous session cache
+    // final prefs = await SharedPreferences.getInstance();
+    // final storedData =
+    //     prefs.getString(FirebaseMessagingHandlerConstants.sessionPrefKey);
+    //
+    // if (storedData != null) {
+    //   // Deserialize the stored list of RemoteMessage objects
+    //   final List<dynamic> jsonList = jsonDecode(storedData);
+    //   final List<RemoteMessage> restoredMessages = jsonList
+    //       .cast<Map<String, dynamic>>()
+    //       .map((data) => RemoteMessage.fromMap(data))
+    //       .toList();
+    //
+    //   // Add to sessionNotifications
+    //   for (final RemoteMessage message in restoredMessages) {
+    //     sessionNotifications.add(message.messageId.hashCode);
+    //   }
+    //
+    //   _logMessage(
+    //       'Restored ${restoredMessages.length} notifications from session.');
+    //   return restoredMessages;
+    // }
 
     return [];
   }
 
   Future<void> clearSessionNotifications() async {
-    sessionNotifications.clear();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('session_notifications');
-    _logMessage('Session notifications cleared.');
+    ///Alternative approach to get the payload from previous session cache
+    // sessionNotifications.clear();
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.remove('session_notifications');
+    // _logMessage('Session notifications cleared.');
   }
 
   void _logMessage(String message) {
     log(message, name: FirebaseMessagingHandlerConstants.logName);
+  }
+
+  /// Subscribe to a topic
+  Future<void> subscribeToTopic(String topic) async {
+    try {
+      await firebaseMessagingInstance.subscribeToTopic(topic);
+      _logMessage('Subscribed to topic: $topic');
+    } catch (error, stack) {
+      _logMessage('Error subscribing to topic $topic: $error');
+      _logMessage('Stack trace: $stack');
+    }
+  }
+
+  /// Unsubscribe from a topic
+  Future<void> unsubscribeFromTopic(String topic) async {
+    try {
+      await firebaseMessagingInstance.unsubscribeFromTopic(topic);
+      _logMessage('Unsubscribed from topic: $topic');
+    } catch (error, stack) {
+      _logMessage('Error unsubscribing from topic $topic: $error');
+      _logMessage('Stack trace: $stack');
+    }
+  }
+
+  /// Unsubscribe from all topics
+  Future<void> unsubscribeFromAllTopics() async {
+    try {
+      await firebaseMessagingInstance.deleteToken();
+      _logMessage('Unsubscribed from all topics by deleting FCM token.');
+    } catch (error, stack) {
+      _logMessage('Error unsubscribing from all topics: $error');
+      _logMessage('Stack trace: $stack');
+    }
+  }
+}
+
+extension StreamExtensions<T> on Stream<T> {
+  Stream<T> startWith(final T initialValue) {
+    final StreamController<T> controller = StreamController<T>();
+    controller.add(initialValue);
+    listen(
+      controller.add,
+      onDone: controller.close,
+      onError: controller.addError,
+      cancelOnError: true,
+    );
+
+    return controller.stream;
   }
 }
