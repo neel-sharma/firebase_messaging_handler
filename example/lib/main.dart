@@ -65,6 +65,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           InkWell(
             onTap: () async {
               await _disposeFirebaseMessagingHandler();
+              await _messagingHandler.clearToken();
               await _initFirebaseMessagingHandler();
             },
             child: const Padding(

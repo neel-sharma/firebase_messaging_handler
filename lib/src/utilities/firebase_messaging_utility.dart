@@ -54,6 +54,9 @@ class FirebaseMessagingUtility {
   /// Shared Preferences instance for storing persistent data.
   SharedPreferences? sharedPref;
 
+  // Boolean flag to ensure initial fetching happens only once
+  bool _hasFetchedInitialNotification = false;
+
   Future<Stream<NotificationData?>?> init({
     required final String senderId,
     required final List<NotificationChannelData> androidChannelList,
@@ -90,15 +93,46 @@ class FirebaseMessagingUtility {
       );
       await handleBackgroundNotifications();
 
-      if (initialMessage?.data != null) {
-        ///Handles terminated notification and instantly fires an event on subscribing.
+      // Check if the app was launched via FirebaseMessaging
+      if (initialMessage?.data != null && !_hasFetchedInitialNotification) {
+        /// Handles terminated notification and instantly fires an event on subscribing.
+        processNotification(
+          initialMessage!,
+          isFromTerminated: true,
+        );
+
         final payload = initialMessage!.data;
+
         initialMessage = null;
+        _hasFetchedInitialNotification = true;
         return getNotificationClickStream()
             .startWith(NotificationData(payload: payload));
-      } else {
-        return getNotificationClickStream();
       }
+
+      // Check if the app was launched via flutter_local_notifications
+      final NotificationAppLaunchDetails? launchDetails =
+          await flutterLocalNotificationsPlugin
+              .getNotificationAppLaunchDetails();
+
+      if ((launchDetails?.didNotificationLaunchApp ?? false) &&
+          !_hasFetchedInitialNotification) {
+        /// Extract payload from NotificationAppLaunchDetails
+        final payload = launchDetails?.notificationResponse?.payload != null
+            ? jsonDecode(launchDetails!.notificationResponse!.payload!)
+            : {};
+
+        processNotification(
+          RemoteMessage.fromMap({'data': payload}),
+          isFromTerminated: true,
+        );
+
+        _hasFetchedInitialNotification = true;
+        return getNotificationClickStream()
+            .startWith(NotificationData(payload: payload));
+      }
+
+      // Default case: no notification launch detected
+      return getNotificationClickStream();
     }
     return null;
   }
@@ -254,14 +288,6 @@ class FirebaseMessagingUtility {
   }
 
   Future<void> handleBackgroundNotifications() async {
-    if (initialMessage != null) {
-      getNotificationClickStream();
-      processNotification(
-        initialMessage!,
-        isFromTerminated: true,
-      );
-    }
-
     FirebaseMessaging.onBackgroundMessage(_onBackgroundMessage);
 
     FirebaseMessaging.onMessageOpenedApp.listen(processNotification);
@@ -285,13 +311,7 @@ class FirebaseMessagingUtility {
 
   void addNotificationClickStreamEvent(final Map<String, dynamic> payload,
       {bool isFromTerminated = false}) {
-    if (isFromTerminated) {
-      clickStream?.startWith(
-        NotificationData(
-          payload: payload,
-        ),
-      );
-    } else {
+    if (!isFromTerminated) {
       clickStreamController?.add(
         NotificationData(
           payload: payload,
