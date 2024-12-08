@@ -22,6 +22,9 @@ Ensure the following permissions and receivers are added within the `<manifest>`
     <uses-permission android:name="android.permission.VIBRATE" /> 
     
     <application>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
             <intent-filter>

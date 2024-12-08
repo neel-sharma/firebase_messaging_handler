@@ -140,6 +140,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
           priority: NotificationPriorityEnum.high,
         ),
       ],
+      ///When ever you are referencing an android asset here please
+      ///make sure you set is as default in AndroidManifest or else it may be removed
+      ///via Proguard while running a release build.
       androidNotificationIconPath: '@drawable/ic_notification',
       senderId: DefaultFirebaseOptions.android.messagingSenderId,
       updateTokenCallback: (final String fcmToken) async {
