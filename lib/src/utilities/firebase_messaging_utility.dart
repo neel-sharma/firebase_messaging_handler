@@ -88,9 +88,17 @@ class FirebaseMessagingUtility {
         androidChannelList: androidChannelList,
         androidNotificationIconPath: androidNotificationIconPath,
       );
-      await handleBackgroundTerminatedNotifications();
+      await handleBackgroundNotifications();
 
-      return getNotificationClickStream();
+      if (initialMessage?.data != null) {
+        ///Handles terminated notification and instantly fires an event on subscribing.
+        final payload = initialMessage!.data;
+        initialMessage = null;
+        return getNotificationClickStream()
+            .startWith(NotificationData(payload: payload));
+      } else {
+        return getNotificationClickStream();
+      }
     }
     return null;
   }
@@ -245,7 +253,7 @@ class FirebaseMessagingUtility {
     }
   }
 
-  Future<void> handleBackgroundTerminatedNotifications() async {
+  Future<void> handleBackgroundNotifications() async {
     if (initialMessage != null) {
       getNotificationClickStream();
       processNotification(
@@ -505,20 +513,5 @@ class FirebaseMessagingUtility {
       _logMessage('Error unsubscribing from all topics: $error');
       _logMessage('Stack trace: $stack');
     }
-  }
-}
-
-extension StreamExtensions<T> on Stream<T> {
-  Stream<T> startWith(final T initialValue) {
-    final StreamController<T> controller = StreamController<T>();
-    controller.add(initialValue);
-    listen(
-      controller.add,
-      onDone: controller.close,
-      onError: controller.addError,
-      cancelOnError: true,
-    );
-
-    return controller.stream;
   }
 }

@@ -1,3 +1,3 @@
-## 0.0.8
+## 0.1.0
 
-* TODO: Dependency constraints updated
+* TODO: Terminated state fixes and added subscription methods for topics

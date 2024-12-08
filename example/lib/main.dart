@@ -144,6 +144,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ///make sure you set is as default in AndroidManifest or else it may be removed
       ///via Proguard while running a release build.
       androidNotificationIconPath: '@drawable/ic_notification',
+      ///Sender id is always same for both Android and iOS
       senderId: DefaultFirebaseOptions.android.messagingSenderId,
       updateTokenCallback: (final String fcmToken) async {
         log('FCM Token: $fcmToken');
